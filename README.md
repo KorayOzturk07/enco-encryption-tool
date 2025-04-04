@@ -54,6 +54,3 @@ Built with ❤️ by Koray Öztürk
 
 ## 📜 License
 This project is licensed under the MIT License.
-
-## 🔗 Repository
-GitHub: [Enco Encryption Tool](https://github.com/KorayOzturk07/enco-encryption-tool)
