@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enco 🔐 - Advanced Encryption Tool</title>
+  <style>
+    :root {
+      --primary: #00ff99;
+      --secondary: #00cc77;
+      --dark: #000;
+      --darker: #111;
+      --light: #eee;
+      --error: #ff5555;
+    }
+    
+    body {
+      margin: 0;
+      background: var(--dark);
+      font-family: 'Courier New', Courier, monospace;
+      color: var(--primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+    
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 10px var(--primary);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { text-shadow: 0 0 10px var(--primary); }
+      50% { text-shadow: 0 0 20px var(--primary); }
+      100% { text-shadow: 0 0 10px var(--primary); }
+    }
+    
+    .tagline {
+      margin-bottom: 2rem;
+      opacity: 0.8;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 800px;
+    }
+    
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    
+    textarea, input, select {
+      background: var(--darker);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 1rem;
+      width: 100%;
+      max-width: 100%;
+      resize: vertical;
+      font-size: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    
+    textarea:focus, input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 10px var(--primary);
+      border-color: var(--secondary);
+    }
+    
+    textarea {
+      min-height: 150px;
+    }
+    
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    
+    button {
+      background: var(--dark);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 0.8rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+      border-radius: 4px;
+      min-width: 120px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button:hover {
+      background: var(--primary);
+      color: var(--dark);
+      transform: translateY(-2px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 153, 0.4), transparent);
+      transition: all 0.5s;
+    }
+    
+    button:hover::after {
+      left: 100%;
+    }
+    
+    .output-container {
+      margin-top: 2rem;
+      position: relative;
+    }
+    
+    .output-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .output-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .output-actions button {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+      min-width: auto;
+    }
+    
+    #output {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: var(--darker);
+      border: 1px solid var(--primary);
+      padding: 1rem;
+      border-radius: 4px;
+      min-height: 50px;
+      margin-top: 0.5rem;
+    }
+    
+    .status {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 4px;
+      text-align: center;
+      display: none;
+    }
+    
+    .status.success {
+      background: rgba(0, 255, 153, 0.2);
+      border: 1px solid var(--primary);
+      display: block;
+    }
+    
+    .status.error {
+      background: rgba(255, 85, 85, 0.2);
+      border: 1px solid var(--error);
+      color: var(--error);
+      display: block;
+    }
+    
+    .settings {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      background: rgba(0, 255, 153, 0.05);
+    }
+    
+    .settings-title {
+      margin-top: 0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .settings-content {
+      display: none;
+      margin-top: 1rem;
+    }
+    
+    .settings.open .settings-content {
+      display: block;
+    }
+    
+    .faq {
+      max-width: 800px;
+      margin-top: 3rem;
+    }
+    
+    .faq h2 {
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--primary);
+      padding-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    details {
+      margin-bottom: 1rem;
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    details[open] {
+      background: rgba(0, 255, 153, 0.05);
+    }
+    
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0.5rem 0;
+      outline: none;
+    }
+    
+    details[open] summary {
+      margin-bottom: 0.5rem;
+    }
+    
+    details p {
+      margin-top: 0;
+    }
+    
+    footer {
+      margin-top: 3rem;
+      font-size: 0.9rem;
+      text-align: center;
+      opacity: 0.7;
+      width: 100%;
+    }
+    
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    .strength-meter {
+      height: 5px;
+      background: var(--darker);
+      margin-top: 0.5rem;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .strength-meter-fill {
+      height: 100%;
+      width: 0;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+    
+    @media screen and (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ENCO 🔐</h1>
+    <p class="tagline">Advanced real-time encryption & decryption tool</p>
+    
+    <div class="input-group">
+      <label for="plainText">Input Text</label>
+      <textarea id="plainText" rows="6" placeholder="Enter text to encrypt or paste encrypted data to decrypt..."></textarea>
+    </div>
+    
+    <div class="input-group">
+      <label for="key">Secret Key</label>
+      <input type="password" id="key" placeholder="Enter your secret key..." autocomplete="off" />
+      <div class="strength-meter">
+        <div class="strength-meter-fill" id="strengthMeter"></div>
+      </div>
+    </div>
+    
+    <div class="settings">
+      <h3 class="settings-title" onclick="toggleSettings()">⚙️ Advanced Settings <span id="settingsToggle">+</span></h3>
+      <div class="settings-content">
+        <div class="input-group">
+          <label for="algorithm">Encryption Algorithm</label>
+          <select id="algorithm">
+            <option value="AES-GCM">AES-GCM (Recommended)</option>
+            <option value="AES-CBC">AES-CBC</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="iterations">Key Derivation Iterations</label>
+          <input type="number" id="iterations" value="100000" min="10000" max="1000000" />
+        </div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button onclick="encryptText()">🔒 Encrypt</button>
+      <button onclick="decryptText()">🔓 Decrypt</button>
+      <button onclick="generateKey()">🎲 Generate Key</button>
+      <button onclick="clearAll()">🗑️ Clear All</button>
+    </div>
+    
+    <div class="output-container">
+      <div class="output-label">
+        <label>Output</label>
+        <div class="output-actions">
+          <button onclick="copyOutput()">📋 Copy</button>
+          <button onclick="saveToFile()">💾 Save</button>
+        </div>
+      </div>
+      <div id="output"></div>
+    </div>
+    
+    <div id="status" class="status"></div>
+    
+    <section class="faq">
+      <h2>📖 Frequently Asked Questions</h2>
+      
+      <details>
+        <summary>What encryption methods does Enco use?</summary>
+        <p>Enco uses industry-standard AES encryption (256-bit) with either GCM or CBC mode. The tool leverages the Web Crypto API built into modern browsers, ensuring high-performance encryption without sending your data to any servers.</p>
+      </details>
+      
+      <details>
+        <summary>Is my data secure with this tool?</summary>
+        <p>All encryption/decryption happens locally in your browser. Your data never leaves your device. However, for highly sensitive information, consider using dedicated encryption software with additional security features.</p>
+      </details>
+      
+      <details>
+        <summary>How does the key derivation work?</summary>
+        <p>Enco uses PBKDF2 (Password-Based Key Derivation Function 2) with SHA-256 hashing to transform your password into a strong encryption key. You can adjust the iteration count in advanced settings for stronger (but slower) key derivation.</p>
+      </details>
+      
+      <details>
+        <summary>Can I use this tool offline?</summary>
+        <p>Absolutely! Enco is a single HTML file with no server dependencies. You can download it and use it completely offline. Save it to your device or bookmark it for easy access.</p>
+      </details>
+      
+      <details>
+        <summary>What browsers are supported?</summary>
+        <p>Enco works in all modern browsers that support the Web Crypto API (Chrome, Firefox, Safari, Edge). For best performance and security, use the latest browser version.</p>
+      </details>
+      
+      <details>
+        <summary>How can I contribute to this project?</summary>
+        <p>Enco is open-source! Visit the GitHub repository to report issues, suggest features, or submit pull requests. Check the footer for the project link.</p>
+      </details>
+    </section>
+    
+    <footer>
+      Built with ❤️ by <a href="https://github.com/KorayOzturk07" target="_blank" rel="noopener">Koray Öztürk</a> • 
+      <a href="https://github.com/KorayOzturk07/enco-encryption-tool" target="_blank" rel="noopener">View on GitHub</a> • 
+      Open Source under MIT License
+    </footer>
+  </div>
+
+  <script>
+    // DOM Elements
+    const plainTextEl = document.getElementById('plainText');
+    const keyEl = document.getElementById('key');
+    const outputEl = document.getElementById('output');
+    const statusEl = document.getElementById('status');
+    const algorithmEl = document.getElementById('algorithm');
+    const iterationsEl = document.getElementById('iterations');
+    const strengthMeterEl = document.getElementById('strengthMeter');
+    
+    // Configuration
+    const SALT = new TextEncoder().encode("ENCO-SECURE-SALT");
+    const DEFAULT_ITERATIONS = 100000;
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load saved settings from localStorage
+      const savedAlgorithm = localStorage.getItem('encoAlgorithm');
+      const savedIterations = localStorage.getItem('encoIterations');
+      
+      if (savedAlgorithm) algorithmEl.value = savedAlgorithm;
+      if (savedIterations) iterationsEl.value = savedIterations;
+      
+      // Key strength meter
+      keyEl.addEventListener('input', updateKeyStrength);
+    });
+    
+    // Toggle advanced settings
+    function toggleSettings() {
+      const settings = document.querySelector('.settings');
+      const toggle = document.getElementById('settingsToggle');
+      
+      settings.classList.toggle('open');
+      toggle.textContent = settings.classList.contains('open') ? '−' : '+';
+    }
+    
+    // Update key strength meter
+    function updateKeyStrength() {
+      const key = keyEl.value;
+      let strength = 0;
+      
+      if (key.length >= 12) strength += 40;
+      else if (key.length >= 8) strength += 20;
+      
+      if (/[A-Z]/.test(key)) strength += 10;
+      if (/[a-z]/.test(key)) strength += 10;
+      if (/[0-9]/.test(key)) strength += 10;
+      if (/[^A-Za-z0-9]/.test(key)) strength += 20;
+      if (key.length >= 16) strength += 10;
+      
+      strength = Math.min(strength, 100);
+      
+      strengthMeterEl.style.width = `${strength}%`;
+      
+      if (strength < 40) {
+        strengthMeterEl.style.background = '#ff5555';
+      } else if (strength < 70) {
+        strengthMeterEl.style.background = '#ffcc00';
+      } else {
+        strengthMeterEl.style.background = '#00ff99';
+      }
+    }
+    
+    // Generate a random key
+    function generateKey() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+      let key = '';
+      
+      // Generate a 16-character key by default
+      for (let i = 0; i < 16; i++) {
+        key += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      
+      keyEl.value = key;
+      updateKeyStrength();
+      showStatus('Generated a secure random key', 'success');
+    }
+    
+    // Get key material from password
+    async function getKeyMaterial(password) {
+      const enc = new TextEncoder();
+      return crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        { name: "PBKDF2" },
+        false,
+        ["deriveKey"]
+      );
+    }
+    
+    // Derive encryption key from password
+    async function deriveKey(password) {
+      const iterations = parseInt(iterationsEl.value) || DEFAULT_ITERATIONS;
+      const keyMaterial = await getKeyMaterial(password);
+      
+      // Save settings
+      localStorage.setItem('encoAlgorithm', algorithmEl.value);
+      localStorage.setItem('encoIterations', iterations);
+      
+      return crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt: SALT,
+          iterations: iterations,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: algorithmEl.value, length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+    }
+    
+    // Encrypt text
+    async function encryptText() {
+      try {
+        const text = plainTextEl.value.trim();
+        const password = keyEl.value.trim();
+        
+        if (!text) return showStatus('Please enter text to encrypt', 'error');
+        if (!password) return showStatus('Please enter a secret key', 'error');
+        
+        const key = await deriveKey(password);
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const enc = new TextEncoder().encode(text);
+        
+        const encrypted = await crypto.subtle.encrypt(
+          { 
+            name: algorithmEl.value,
+            iv: iv
+          },
+          key,
+          enc
+        );
+        
+        const encryptedArray = new Uint8Array(encrypted);
+        const encryptedBase64 = btoa(String.fromCharCode(...iv, ...encryptedArray));
+        
+        outputEl.textContent = encryptedBase64;
+        showStatus('Text encrypted successfully!', 'success');
+      } catch (e) {
+        console.error(e);
+        showStatus('Encryption failed. Please check your inputs.', 'error');
+      }
+    }
+    
+    // Decrypt text
+    async function decryptText() {
+      try {
+        const encrypted = plainTextEl.value.trim();
+        const password = keyEl.value.trim();
+        
+        if (!encrypted) return showStatus('Please enter encrypted data', 'error');
+        if (!password) return showStatus('Please enter the secret key', 'error');
+        
+        // Try to detect if input is base64
+        try {
+          atob(encrypted);
+        } catch {
+          return showStatus('Invalid encrypted data format', 'error');
+        }
+        
+        const data = atob(encrypted);
+        const iv = new Uint8Array([...data].slice(0, 12).map(c => c.charCodeAt(0)));
+        const encryptedBytes = new Uint8Array([...data].slice(12).map(c => c.charCodeAt(0)));
+        
+        const key = await deriveKey(password);
+        const decrypted = await crypto.subtle.decrypt(
+          { 
+            name: algorithmEl.value,
+            iv: iv
+          },
+          key,
+          encryptedBytes
+        );
+        
+        const dec = new TextDecoder().decode(decrypted);
+        outputEl.textContent = dec;
+        showStatus('Text decrypted successfully!', 'success');
+      } catch (e) {
+        console.error(e);
+        showStatus('Decryption failed. Wrong key or corrupted data.', 'error');
+      }
+    }
+    
+    // Copy output to clipboard
+    async function copyOutput() {
+      const output = outputEl.textContent;
+      
+      if (!output) {
+        showStatus('No output to copy', 'error');
+        return;
+      }
+      
+      try {
+        await navigator.clipboard.writeText(output);
+        showStatus('Copied to clipboard!', 'success');
+      } catch (e) {
+        showStatus('Failed to copy. Please try again.', 'error');
+      }
+    }
+    
+    // Save output to file
+    function saveToFile() {
+      const output = outputEl.textContent;
+      
+      if (!output) {
+        showStatus('No output to save', 'error');
+        return;
+      }
+      
+      const blob = new Blob([output], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      
+      a.href = url;
+      a.download = 'enco-output.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showStatus('File saved!', 'success');
+    }
+    
+    // Clear all inputs
+    function clearAll() {
+      plainTextEl.value = '';
+      keyEl.value = '';
+      outputEl.textContent = '';
+      statusEl.className = 'status';
+      statusEl.textContent = '';
+      strengthMeterEl.style.width = '0';
+    }
+    
+    // Show status message
+    function showStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+      
+      // Auto-hide success messages after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          if (statusEl.textContent === message) {
+            statusEl.className = 'status';
+            statusEl.textContent = '';
+          }
+        }, 5000);
+      }
+    }
+  </script>
+</body>
+</html>
