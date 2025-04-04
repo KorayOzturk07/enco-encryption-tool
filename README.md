@@ -11,7 +11,6 @@ ENCO is a sleek, browser-based, real-time encryption and decryption tool built e
 - 📋 **Copy output to clipboard**
 - 🛠️ **Adjustable settings** for iterations and algorithm choice
 - 📎 **Completely offline capable**
-- 🧠 **FAQs section** built-in
 
 ## 🚀 Getting Started
 1. Download or clone the repository.
