@@ -3,398 +3,654 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Enco 🔐 - Advanced Encryption Tool</title>
+  <title>Enco 🔐 - Secure AES-256 Encryption [Hacker Edition]</title>
+  <meta name="description" content="Advanced online AES-256 encryption tool with a hacker theme. Encrypt and decrypt text securely in your browser. Features Matrix rain background and works offline.">
+  <meta name="keywords" content="AES encryption, online encryption tool, secure encryption, AES-256, encrypt text, decrypt text, browser encryption, offline encryption, hacker theme, matrix rain">
+  <meta name="author" content="Koray Öztürk (Enhanced Version)">
   <style>
     :root {
-      --primary: #00ff99;
-      --secondary: #00cc77;
-      --dark: #000;
-      --darker: #111;
-      --light: #eee;
-      --error: #ff5555;
+      --primary: #0f0; /* Neon Green */
+      --primary-dark: #0c0;
+      --primary-light: #9f9;
+      --dark: #0a0a0a;
+      --darker: #1a1a1a; /* Slightly lighter for panels */
+      --darkest: #050505;
+      --light: #ccc; /* Lighter grey for some text */
+      --error: #f00; /* Neon Red */
+      --warning: #ff0; /* Neon Yellow */
+      --info: #0cf; /* Neon Cyan */
+      --glow-color: rgba(0, 255, 0, 0.5);
+      --glow-color-error: rgba(255, 0, 0, 0.5);
+      --glow-color-warning: rgba(255, 255, 0, 0.5);
+      --glow-color-info: rgba(0, 204, 255, 0.5);
+      --font-main: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
     }
-    
-    body {
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      background: var(--dark);
-      font-family: 'Courier New', Courier, monospace;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px; /* Base font size */
+    }
+
+    body {
+      background-color: var(--dark);
       color: var(--primary);
+      font-family: var(--font-main);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem;
+      padding: 2rem 1rem; /* Adjusted padding */
       min-height: 100vh;
+      line-height: 1.6;
+      position: relative; /* Needed for canvas positioning */
+      overflow-x: hidden; /* Prevent horizontal scroll */
     }
-    
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-      text-shadow: 0 0 10px var(--primary);
-      animation: pulse 2s infinite;
+
+    /* Matrix Rain Canvas */
+    #matrix-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1; /* Behind everything */
+      opacity: 0.4; /* Make it less distracting */
     }
-    
-    @keyframes pulse {
-      0% { text-shadow: 0 0 10px var(--primary); }
-      50% { text-shadow: 0 0 20px var(--primary); }
-      100% { text-shadow: 0 0 10px var(--primary); }
-    }
-    
-    .tagline {
-      margin-bottom: 2rem;
-      opacity: 0.8;
-    }
-    
+
     .container {
       width: 100%;
-      max-width: 800px;
+      max-width: 900px; /* Slightly wider */
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1.5rem;
+      z-index: 1; /* Ensure content is above canvas */
+      background: rgba(10, 10, 10, 0.8); /* Semi-transparent background to see rain */
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--primary-dark);
+      box-shadow: 0 0 20px var(--glow-color);
     }
-    
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--glow-color);
+      animation: flicker 3s infinite alternate;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    @keyframes flicker {
+      0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        text-shadow: 0 0 8px var(--primary), 0 0 15px var(--primary), 0 0 25px var(--glow-color), 0 0 40px var(--glow-color);
+      }
+      20%, 24%, 55% {
+        text-shadow: none;
+      }
+    }
+
+    .tagline {
+      margin-bottom: 2rem;
+      color: var(--light);
+      text-align: center;
+      max-width: 600px;
+      align-self: center; /* Center tagline within container */
+      font-size: 0.9rem;
+    }
+
+    .panel {
+      background: var(--darker);
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      padding: 1.5rem;
+      box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1), 0 0 5px rgba(0, 255, 0, 0.1);
+      width: 100%;
+    }
+
     .input-group {
       margin-bottom: 1.5rem;
+      width: 100%;
+      position: relative; /* For help tooltip */
     }
-    
-    label {
-      display: block;
+
+    .input-group label {
+      display: flex; /* Use flex for alignment */
+      align-items: center;
+      gap: 0.5rem;
       margin-bottom: 0.5rem;
       font-weight: bold;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    
+
     textarea, input, select {
-      background: var(--darker);
+      background: var(--darkest);
       color: var(--primary);
       border: 1px solid var(--primary);
-      padding: 1rem;
+      padding: 0.8rem 1rem; /* Adjusted padding */
       width: 100%;
       max-width: 100%;
       resize: vertical;
       font-size: 1rem;
-      font-family: 'Courier New', Courier, monospace;
+      font-family: var(--font-main);
       border-radius: 4px;
       transition: all 0.3s ease;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
     }
-    
+
     textarea:focus, input:focus, select:focus {
       outline: none;
-      box-shadow: 0 0 10px var(--primary);
-      border-color: var(--secondary);
+      box-shadow: 0 0 10px var(--glow-color), inset 0 0 8px var(--glow-color);
+      border-color: var(--primary-light);
+      background: #111; /* Slightly lighten on focus */
     }
-    
+
     textarea {
       min-height: 150px;
     }
-    
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
+
+    input[type="password"] {
+      letter-spacing: 2px; /* Obscure length slightly */
+    }
+
+    /* Help Icon & Tooltip */
+    .help-icon {
+      cursor: help;
+      color: var(--primary-light);
+      font-size: 0.8rem; /* Smaller */
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
       justify-content: center;
-      gap: 1rem;
-      margin: 1.5rem 0;
+      border: 1px solid var(--primary-light);
+      transition: all 0.2s;
+      flex-shrink: 0;
+      position: relative; /* Needed for tooltip positioning */
     }
-    
-    button {
-      background: var(--dark);
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      padding: 0.8rem 1.5rem;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-      font-family: 'Courier New', Courier, monospace;
-      font-weight: bold;
-      border-radius: 4px;
-      min-width: 120px;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    button:hover {
+
+    .help-icon:hover {
       background: var(--primary);
       color: var(--dark);
-      transform: translateY(-2px);
+      box-shadow: 0 0 8px var(--glow-color);
     }
-    
-    button:active {
-      transform: translateY(0);
+
+    .help-tooltip {
+      position: absolute;
+      bottom: 120%; /* Position above the icon */
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--darkest);
+      color: var(--primary-light);
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      padding: 0.8rem;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      width: max-content; /* Adjust width to content */
+      max-width: 300px;
+      z-index: 10;
+      visibility: hidden; /* Hidden by default */
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      white-space: normal; /* Allow text wrapping */
     }
-    
-    button::after {
+
+    .help-icon:hover .help-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Tooltip Arrow */
+    .help-tooltip::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px;
+      border-style: solid;
+      border-color: var(--primary) transparent transparent transparent;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Adjust minmax */
+      gap: 1rem;
+      margin: 1.5rem 0; /* Increased margin */
       width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 255, 153, 0.4), transparent);
-      transition: all 0.5s;
     }
-    
-    button:hover::after {
-      left: 100%;
-    }
-    
-    .output-container {
-      margin-top: 2rem;
+
+    button {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 0.8rem 1rem; /* Adjusted padding */
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      font-family: var(--font-main);
+      font-weight: bold;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
       position: relative;
+      overflow: hidden;
+      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 5px var(--glow-color);
     }
-    
-    .output-label {
+
+    button:hover:not(:disabled) {
+      background: var(--primary);
+      color: var(--dark);
+      box-shadow: 0 0 15px var(--glow-color), 0 0 25px var(--glow-color);
+      transform: translateY(-2px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 0 5px var(--glow-color);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      border-color: var(--light);
+      color: var(--light);
+    }
+
+    /* Button glow effect on hover */
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(0, 255, 0, 0.3) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none; /* Allow clicks through */
+    }
+
+    button:hover:not(:disabled)::before {
+      opacity: 1;
+    }
+
+    .output-container {
+      width: 100%;
+    }
+
+    .output-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 1rem; /* Increased margin */
+      flex-wrap: wrap;
+      gap: 1rem; /* Increased gap */
     }
-    
+
+    .output-header label {
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
     .output-actions {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.8rem; /* Consistent gap */
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
-    
+
     .output-actions button {
-      padding: 0.3rem 0.6rem;
-      font-size: 0.8rem;
-      min-width: auto;
+      padding: 0.6rem 0.9rem; /* Adjusted padding */
+      font-size: 0.85rem;
+      min-width: auto; /* Let buttons size naturally */
+      flex-shrink: 0; /* Prevent shrinking */
     }
-    
+
     #output {
       white-space: pre-wrap;
       word-wrap: break-word;
-      background: var(--darker);
+      background: var(--darkest);
       border: 1px solid var(--primary);
       padding: 1rem;
       border-radius: 4px;
-      min-height: 50px;
-      margin-top: 0.5rem;
+      min-height: 120px; /* Increased height */
+      width: 100%;
+      font-family: var(--font-main);
+      font-size: 0.9rem; /* Slightly smaller output font */
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s ease;
     }
-    
+
+    #output:empty::before {
+      content: "// Output will appear here...";
+      color: var(--light);
+      opacity: 0.5;
+    }
+
     .status {
       margin-top: 1rem;
-      padding: 0.5rem;
+      padding: 0.8rem 1rem;
       border-radius: 4px;
       text-align: center;
       display: none;
+      width: 100%;
+      font-size: 0.9rem;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
     }
-    
+
     .status.success {
-      background: rgba(0, 255, 153, 0.2);
-      border: 1px solid var(--primary);
+      background: rgba(0, 255, 0, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 8px var(--glow-color);
       display: block;
     }
-    
+
     .status.error {
-      background: rgba(255, 85, 85, 0.2);
-      border: 1px solid var(--error);
+      background: rgba(255, 0, 0, 0.1);
+      border-color: var(--error);
       color: var(--error);
+      box-shadow: 0 0 8px var(--glow-color-error);
       display: block;
     }
-    
-    .settings {
-      margin: 1.5rem 0;
-      padding: 1rem;
-      border: 1px solid var(--primary);
-      border-radius: 4px;
-      background: rgba(0, 255, 153, 0.05);
+
+    .status.warning {
+      background: rgba(255, 255, 0, 0.1);
+      border-color: var(--warning);
+      color: var(--warning);
+      box-shadow: 0 0 8px var(--glow-color-warning);
+      display: block;
     }
-    
+
+    .status.info {
+      background: rgba(0, 204, 255, 0.1);
+      border-color: var(--info);
+      color: var(--info);
+      box-shadow: 0 0 8px var(--glow-color-info);
+      display: block;
+    }
+
+    .settings {
+      width: 100%;
+      border-top: 1px dashed var(--primary-dark); /* Separator */
+      padding-top: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
     .settings-title {
-      margin-top: 0;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      user-select: none;
+      padding-bottom: 0.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 1px;
     }
-    
+    .settings-title span:first-child {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    #settingsToggle {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .settings.open #settingsToggle {
+       transform: rotate(45deg);
+    }
+
     .settings-content {
       display: none;
       margin-top: 1rem;
+      padding-left: 1rem; /* Indent settings */
+      border-left: 2px solid var(--primary-dark);
     }
-    
+
     .settings.open .settings-content {
       display: block;
+      animation: fadeIn 0.5s ease;
     }
-    
-    .faq {
-      max-width: 800px;
-      margin-top: 3rem;
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    
-    .faq h2 {
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid var(--primary);
-      padding-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    details {
-      margin-bottom: 1rem;
-      border: 1px solid var(--primary);
-      border-radius: 4px;
-      padding: 0.5rem 1rem;
-      transition: all 0.3s ease;
-    }
-    
-    details[open] {
-      background: rgba(0, 255, 153, 0.05);
-    }
-    
-    summary {
-      cursor: pointer;
-      font-weight: bold;
-      padding: 0.5rem 0;
-      outline: none;
-    }
-    
-    details[open] summary {
-      margin-bottom: 0.5rem;
-    }
-    
-    details p {
-      margin-top: 0;
-    }
-    
-    footer {
-      margin-top: 3rem;
-      font-size: 0.9rem;
-      text-align: center;
-      opacity: 0.7;
-      width: 100%;
-    }
-    
-    footer a {
-      color: var(--primary);
-      text-decoration: none;
-    }
-    
-    footer a:hover {
-      text-decoration: underline;
-    }
-    
+
+
     .strength-meter {
-      height: 5px;
-      background: var(--darker);
-      margin-top: 0.5rem;
-      border-radius: 2px;
+      height: 6px; /* Slightly thicker */
+      background: var(--darkest);
+      margin-top: 0.8rem; /* Increased margin */
+      border-radius: 3px;
       overflow: hidden;
+      border: 1px solid var(--primary-dark);
     }
-    
+
     .strength-meter-fill {
       height: 100%;
       width: 0;
-      transition: width 0.3s ease, background 0.3s ease;
+      transition: width 0.3s ease, background-color 0.3s ease;
     }
-    
-    @media screen and (max-width: 600px) {
+
+    .key-actions {
+      display: grid; /* Use grid for better control */
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .key-actions button {
+       font-size: 0.85rem; /* Smaller font for key actions */
+       padding: 0.6rem 0.8rem;
+    }
+
+    footer {
+      margin-top: 3rem;
+      font-size: 0.85rem;
+      text-align: center;
+      color: var(--light);
+      opacity: 0.7;
+      width: 100%;
+      max-width: 900px;
+      z-index: 1;
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--primary-light);
+      text-decoration: underline;
+      text-shadow: 0 0 5px var(--glow-color);
+    }
+
+    /* Responsive Adjustments */
+    @media screen and (max-width: 768px) {
+        .container {
+            padding: 1rem 0.5rem; /* Reduce padding on smaller screens */
+        }
+        h1 {
+            font-size: 2rem;
+        }
+        .controls {
+             grid-template-columns: 1fr 1fr; /* Two columns */
+        }
+        .key-actions {
+             grid-template-columns: 1fr 1fr; /* Two columns */
+        }
+        .output-header {
+           flex-direction: column;
+           align-items: flex-start;
+           gap: 0.8rem;
+        }
+        .output-actions {
+           width: 100%;
+           justify-content: flex-start;
+           gap: 0.5rem; /* Reduce gap slightly */
+        }
+        .output-actions button {
+           padding: 0.5rem 0.8rem;
+           font-size: 0.8rem;
+        }
+    }
+
+
+    @media screen and (max-width: 480px) {
       body {
+        padding: 1rem 0.5rem; /* Minimal padding */
+      }
+       h1 {
+        font-size: 1.8rem;
+      }
+      .tagline {
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+      }
+      .panel {
         padding: 1rem;
       }
-      
-      h1 {
-        font-size: 2rem;
-      }
-      
       .controls {
-        flex-direction: column;
-        align-items: stretch;
+         grid-template-columns: 1fr; /* Stack main buttons */
       }
-      
-      button {
-        width: 100%;
+      .key-actions {
+         grid-template-columns: 1fr; /* Stack key buttons */
       }
+       .output-actions {
+           /* Ensure buttons wrap nicely */
+           justify-content: center; /* Center buttons when they wrap */
+        }
+       .output-actions button {
+           flex-grow: 1; /* Allow buttons to grow */
+           min-width: 100px;
+        }
+       footer {
+        font-size: 0.8rem;
+       }
     }
+
   </style>
 </head>
 <body>
+  <canvas id="matrix-canvas"></canvas>
+
   <div class="container">
     <h1>ENCO 🔐</h1>
-    <p class="tagline">Advanced real-time encryption & decryption tool</p>
-    
-    <div class="input-group">
-      <label for="plainText">Input Text</label>
-      <textarea id="plainText" rows="6" placeholder="Enter text to encrypt or paste encrypted data to decrypt..."></textarea>
-    </div>
-    
-    <div class="input-group">
-      <label for="key">Secret Key</label>
-      <input type="password" id="key" placeholder="Enter your secret key..." autocomplete="off" />
-      <div class="strength-meter">
-        <div class="strength-meter-fill" id="strengthMeter"></div>
+    <p class="tagline">// Secure terminal-based encryption_ // Works offline //</p>
+
+    <div class="panel">
+      <div class="input-group">
+        <label for="plainText">
+          Input Data
+          <span class="help-icon">?
+             <span class="help-tooltip">Enter text to encrypt or paste Base64 encrypted data to decrypt. Avoid clipboard for max security - use save/load features where possible.</span>
+          </span>
+        </label>
+        <textarea id="plainText" rows="6" placeholder="// Enter plaintext or ciphertext..."></textarea>
+      </div>
+
+      <div class="input-group">
+        <label for="key">
+          Secret Key
+           <span class="help-icon">?
+             <span class="help-tooltip">Your encryption passkey. Must be strong & secret. Required for decryption. Use 'Generate Key' for a secure option.</span>
+          </span>
+        </label>
+        <input type="password" id="key" placeholder="// Enter secret key..." autocomplete="off" />
+        <div class="strength-meter">
+          <div class="strength-meter-fill" id="strengthMeter"></div>
+        </div>
+        <div class="key-actions">
+          <button id="generateKeyBtn" onclick="generateKey()">🎲 Generate</button>
+          <button id="revealKeyBtn" onclick="revealKey()">👁️ Reveal</button>
+          <button id="copyKeyBtn" onclick="copyKey()">📋 Copy Key</button>
+        </div>
+      </div>
+
+      <div class="settings">
+        <div class="settings-title" onclick="toggleSettings()">
+           <span>
+               <span id="settingsToggle">+</span> Advanced Config
+           </span>
+           <span class="help-icon">?
+                <span class="help-tooltip">Fine-tune cryptographic parameters. Defaults are secure for most users. Higher iterations increase security but slow down processing.</span>
+           </span>
+        </div>
+        <div class="settings-content">
+          <div class="input-group">
+            <label for="algorithm">
+              Algorithm
+              <span class="help-icon">?
+                 <span class="help-tooltip">AES-GCM (recommended): Provides confidentiality & authenticity (detects tampering). AES-CBC: Legacy option, provides confidentiality only.</span>
+              </span>
+            </label>
+            <select id="algorithm">
+              <option value="AES-GCM">AES-GCM (Recommended)</option>
+              <option value="AES-CBC">AES-CBC</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="iterations">
+              PBKDF2 Iterations
+              <span class="help-icon">?
+                <span class="help-tooltip">Key derivation rounds. More rounds = slower, but more resistant to brute-force attacks on the key. (Min: 10000, Max: 1000000)</span>
+              </span>
+            </label>
+            <input type="number" id="iterations" value="100000" min="10000" max="1000000" step="10000" />
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="encryptBtn" onclick="encryptText()">🔒 Encrypt</button>
+        <button id="decryptBtn" onclick="decryptText()">🔓 Decrypt</button>
+        <button id="clearBtn" onclick="clearAll()">🗑️ Clear</button>
       </div>
     </div>
-    
-    <div class="settings">
-      <h3 class="settings-title" onclick="toggleSettings()">⚙️ Advanced Settings <span id="settingsToggle">+</span></h3>
-      <div class="settings-content">
-        <div class="input-group">
-          <label for="algorithm">Encryption Algorithm</label>
-          <select id="algorithm">
-            <option value="AES-GCM">AES-GCM (Recommended)</option>
-            <option value="AES-CBC">AES-CBC</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label for="iterations">Key Derivation Iterations</label>
-          <input type="number" id="iterations" value="100000" min="10000" max="1000000" />
-        </div>
-      </div>
-    </div>
-    
-    <div class="controls">
-      <button onclick="encryptText()">🔒 Encrypt</button>
-      <button onclick="decryptText()">🔓 Decrypt</button>
-      <button onclick="generateKey()">🎲 Generate Key</button>
-      <button onclick="clearAll()">🗑️ Clear All</button>
-    </div>
-    
-    <div class="output-container">
-      <div class="output-label">
-        <label>Output</label>
+
+    <div class="panel">
+      <div class="output-header">
+        <label>// Output //</label>
         <div class="output-actions">
-          <button onclick="copyOutput()">📋 Copy</button>
-          <button onclick="saveToFile()">💾 Save</button>
+          <button id="copyOutputBtn" onclick="copyOutput()">📋 Copy Out</button>
+          <button id="saveOutputBtn" onclick="saveToFile()">💾 Save Out</button>
+          <button id="copyAllBtn" onclick="copyKeyAndOutput()">📋 Copy All</button>
+          <button id="saveAllBtn" onclick="saveKeyAndOutput()">💾 Save All</button>
         </div>
       </div>
       <div id="output"></div>
+      <div id="status" class="status" aria-live="polite"></div>
     </div>
-    
-    <div id="status" class="status"></div>
-    
-    <section class="faq">
-      <h2>📖 Frequently Asked Questions</h2>
-      
-      <details>
-        <summary>What encryption methods does Enco use?</summary>
-        <p>Enco uses industry-standard AES encryption (256-bit) with either GCM or CBC mode. The tool leverages the Web Crypto API built into modern browsers, ensuring high-performance encryption without sending your data to any servers.</p>
-      </details>
-      
-      <details>
-        <summary>Is my data secure with this tool?</summary>
-        <p>All encryption/decryption happens locally in your browser. Your data never leaves your device. However, for highly sensitive information, consider using dedicated encryption software with additional security features.</p>
-      </details>
-      
-      <details>
-        <summary>How does the key derivation work?</summary>
-        <p>Enco uses PBKDF2 (Password-Based Key Derivation Function 2) with SHA-256 hashing to transform your password into a strong encryption key. You can adjust the iteration count in advanced settings for stronger (but slower) key derivation.</p>
-      </details>
-      
-      <details>
-        <summary>Can I use this tool offline?</summary>
-        <p>Absolutely! Enco is a single HTML file with no server dependencies. You can download it and use it completely offline. Save it to your device or bookmark it for easy access.</p>
-      </details>
-      
-      <details>
-        <summary>What browsers are supported?</summary>
-        <p>Enco works in all modern browsers that support the Web Crypto API (Chrome, Firefox, Safari, Edge). For best performance and security, use the latest browser version.</p>
-      </details>
-      
-      <details>
-        <summary>How can I contribute to this project?</summary>
-        <p>Enco is open-source! Visit the GitHub repository to report issues, suggest features, or submit pull requests. Check the footer for the project link.</p>
-      </details>
-    </section>
-    
+
     <footer>
-      Built with ❤️ by <a href="https://github.com/KorayOzturk07" target="_blank" rel="noopener">Koray Öztürk</a> • 
-      <a href="https://github.com/KorayOzturk07/enco-encryption-tool" target="_blank" rel="noopener">View on GitHub</a> • 
-      Open Source under MIT License
+      <p>[[ System Online | No data leaves your browser | Client-Side Encryption ]]</p>
+      Built by <a href="https://github.com/KorayOzturk07" target="_blank" rel="noopener noreferrer">Koray Öztürk</a> •
+      <a href="https://github.com/KorayOzturk07/enco-encryption-tool" target="_blank" rel="noopener noreferrer">View Source</a> • MIT License
     </footer>
   </div>
 
@@ -407,247 +663,497 @@
     const algorithmEl = document.getElementById('algorithm');
     const iterationsEl = document.getElementById('iterations');
     const strengthMeterEl = document.getElementById('strengthMeter');
-    
+    const settingsToggle = document.getElementById('settingsToggle');
+
+    // Buttons for disabling
+    const encryptBtn = document.getElementById('encryptBtn');
+    const decryptBtn = document.getElementById('decryptBtn');
+    const generateKeyBtn = document.getElementById('generateKeyBtn');
+    const revealKeyBtn = document.getElementById('revealKeyBtn');
+    const copyKeyBtn = document.getElementById('copyKeyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyOutputBtn = document.getElementById('copyOutputBtn');
+    const saveOutputBtn = document.getElementById('saveOutputBtn');
+    const copyAllBtn = document.getElementById('copyAllBtn');
+    const saveAllBtn = document.getElementById('saveAllBtn');
+
     // Configuration
-    const SALT = new TextEncoder().encode("ENCO-SECURE-SALT");
+    const SALT = new TextEncoder().encode("ENCO-MATRIX-SALT-V2"); // Unique salt
     const DEFAULT_ITERATIONS = 100000;
-    
-    // Initialize
+    let statusTimeout = null;
+
+    // --- Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
-      // Load saved settings from localStorage
+      loadSettings();
+      keyEl.addEventListener('input', updateKeyStrength);
+      updateKeyStrength(); // Initial check
+      plainTextEl.focus();
+      setupMatrixRain(); // Start Matrix background
+    });
+
+    // --- Settings Persistence ---
+    function loadSettings() {
       const savedAlgorithm = localStorage.getItem('encoAlgorithm');
       const savedIterations = localStorage.getItem('encoIterations');
-      
       if (savedAlgorithm) algorithmEl.value = savedAlgorithm;
-      if (savedIterations) iterationsEl.value = savedIterations;
-      
-      // Key strength meter
-      keyEl.addEventListener('input', updateKeyStrength);
-    });
-    
-    // Toggle advanced settings
+      if (savedIterations) iterationsEl.value = parseInt(savedIterations, 10) || DEFAULT_ITERATIONS;
+    }
+
+    function saveSettings() {
+       const iterations = parseInt(iterationsEl.value, 10) || DEFAULT_ITERATIONS;
+       // Clamp iterations within bounds
+       const clampedIterations = Math.max(10000, Math.min(1000000, iterations));
+       if (iterations !== clampedIterations) {
+           iterationsEl.value = clampedIterations;
+           showStatus(`Iterations clamped to ${clampedIterations}`, 'warning');
+       }
+       localStorage.setItem('encoAlgorithm', algorithmEl.value);
+       localStorage.setItem('encoIterations', clampedIterations);
+       return clampedIterations; // Return the potentially clamped value
+    }
+
+    // --- UI Functions ---
     function toggleSettings() {
       const settings = document.querySelector('.settings');
-      const toggle = document.getElementById('settingsToggle');
-      
       settings.classList.toggle('open');
-      toggle.textContent = settings.classList.contains('open') ? '−' : '+';
+      settingsToggle.textContent = settings.classList.contains('open') ? '−' : '+';
     }
-    
-    // Update key strength meter
+
     function updateKeyStrength() {
       const key = keyEl.value;
       let strength = 0;
-      
-      if (key.length >= 12) strength += 40;
-      else if (key.length >= 8) strength += 20;
-      
-      if (/[A-Z]/.test(key)) strength += 10;
-      if (/[a-z]/.test(key)) strength += 10;
-      if (/[0-9]/.test(key)) strength += 10;
-      if (/[^A-Za-z0-9]/.test(key)) strength += 20;
-      if (key.length >= 16) strength += 10;
-      
-      strength = Math.min(strength, 100);
-      
+      let feedback = [];
+
+      // Length (Max 50 points)
+      if (key.length >= 24) strength += 50;
+      else if (key.length >= 16) strength += 40;
+      else if (key.length >= 12) strength += 30;
+      else if (key.length >= 8) strength += 15;
+      else strength += key.length * 1.5; // Small boost for short keys
+
+      if (key.length < 8) feedback.push("Too short");
+      else if (key.length < 12) feedback.push("Short");
+
+      // Character Variety (Max 50 points)
+      let varietyScore = 0;
+      if (/[A-Z]/.test(key)) { varietyScore += 10; feedback.push("Uppercase"); }
+      if (/[a-z]/.test(key)) { varietyScore += 10; feedback.push("Lowercase"); }
+      if (/[0-9]/.test(key)) { varietyScore += 10; feedback.push("Numbers"); }
+      if (/[^A-Za-z0-9]/.test(key)) { varietyScore += 20; feedback.push("Symbols"); }
+
+      strength += Math.min(varietyScore, 50);
+      strength = Math.min(Math.max(strength, 0), 100); // Clamp 0-100
+
       strengthMeterEl.style.width = `${strength}%`;
-      
+
       if (strength < 40) {
-        strengthMeterEl.style.background = '#ff5555';
+        strengthMeterEl.style.backgroundColor = 'var(--error)';
       } else if (strength < 70) {
-        strengthMeterEl.style.background = '#ffcc00';
+        strengthMeterEl.style.backgroundColor = 'var(--warning)';
       } else {
-        strengthMeterEl.style.background = '#00ff99';
+        strengthMeterEl.style.backgroundColor = 'var(--primary)';
       }
+
+      // Optional: Display feedback (could be added to a dedicated element)
+      // console.log("Key strength:", strength, "Feedback:", feedback.join(', '));
     }
-    
-    // Generate a random key
-    function generateKey() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
-      let key = '';
-      
-      // Generate a 16-character key by default
-      for (let i = 0; i < 16; i++) {
-        key += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      
-      keyEl.value = key;
-      updateKeyStrength();
-      showStatus('Generated a secure random key', 'success');
+
+     function showStatus(message, type = 'info', duration = 5000) {
+        clearTimeout(statusTimeout); // Clear previous timeout
+        statusEl.textContent = `// ${message}`; // Add hacker prefix
+        statusEl.className = `status ${type}`; // Apply class
+
+        // Auto-hide non-error messages after duration
+        if (type !== 'error') {
+            statusTimeout = setTimeout(() => {
+                // Check if the message is still the same before clearing
+                if (statusEl.textContent === `// ${message}`) {
+                     hideStatus();
+                }
+            }, duration);
+        }
     }
-    
-    // Get key material from password
+
+    function hideStatus() {
+        statusEl.className = 'status';
+        statusEl.textContent = '';
+    }
+
+    function setBusyState(isBusy, button, busyText) {
+        if (isBusy) {
+            button.disabled = true;
+            button.dataset.originalText = button.textContent;
+            button.innerHTML = `[...] ${busyText}`; // Visual indicator
+        } else {
+            button.disabled = false;
+            if (button.dataset.originalText) {
+                button.textContent = button.dataset.originalText;
+            }
+        }
+    }
+
+    // --- Core Crypto Functions ---
     async function getKeyMaterial(password) {
       const enc = new TextEncoder();
       return crypto.subtle.importKey(
         "raw",
         enc.encode(password),
         { name: "PBKDF2" },
-        false,
+        false, // not exportable
         ["deriveKey"]
       );
     }
-    
-    // Derive encryption key from password
+
     async function deriveKey(password) {
-      const iterations = parseInt(iterationsEl.value) || DEFAULT_ITERATIONS;
+      const iterations = saveSettings(); // Save settings & get potentially clamped iterations
       const keyMaterial = await getKeyMaterial(password);
-      
-      // Save settings
-      localStorage.setItem('encoAlgorithm', algorithmEl.value);
-      localStorage.setItem('encoIterations', iterations);
-      
+
+      // Derive the key using PBKDF2
       return crypto.subtle.deriveKey(
         {
           name: "PBKDF2",
-          salt: SALT,
+          salt: SALT, // Use the predefined salt
           iterations: iterations,
-          hash: "SHA-256"
+          hash: "SHA-256" // Use SHA-256 for hashing in PBKDF2
         },
-        keyMaterial,
-        { name: algorithmEl.value, length: 256 },
-        true,
-        ["encrypt", "decrypt"]
+        keyMaterial, // Base key material
+        { name: algorithmEl.value, length: 256 }, // Specify AES algorithm and 256-bit key size
+        true, // Key is extractable (false is generally better, but needed for some operations/debugging)
+        ["encrypt", "decrypt"] // Key usages
       );
     }
-    
-    // Encrypt text
+
+    // --- Action Functions ---
     async function encryptText() {
+      hideStatus(); // Clear previous status
+      const text = plainTextEl.value;
+      const password = keyEl.value;
+
+      if (!text) { showStatus('Input data required', 'error'); plainTextEl.focus(); return; }
+      if (!password) { showStatus('Secret key required', 'error'); keyEl.focus(); return; }
+      if (password.length < 8 && strengthMeterEl.style.backgroundColor !== 'var(--primary)') {
+         showStatus('Warning: Key is weak!', 'warning');
+         // No return, allow weak keys but warn
+      }
+
+
+      setBusyState(true, encryptBtn, 'Encrypting');
+      setBusyState(true, decryptBtn, ''); // Disable decrypt too
+
       try {
-        const text = plainTextEl.value.trim();
-        const password = keyEl.value.trim();
-        
-        if (!text) return showStatus('Please enter text to encrypt', 'error');
-        if (!password) return showStatus('Please enter a secret key', 'error');
-        
+        showStatus('Deriving key & encrypting...', 'info', 10000); // Longer timeout for potentially slow ops
         const key = await deriveKey(password);
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-        const enc = new TextEncoder().encode(text);
-        
+        const algorithm = algorithmEl.value;
+        const ivSize = algorithm === 'AES-GCM' ? 12 : 16; // IV size based on algorithm
+        const iv = crypto.getRandomValues(new Uint8Array(ivSize)); // Generate random IV
+
+        const enc = new TextEncoder().encode(text); // Convert text to bytes
+
+        // Perform encryption
         const encrypted = await crypto.subtle.encrypt(
-          { 
-            name: algorithmEl.value,
-            iv: iv
+          {
+            name: algorithm,
+            iv: iv,
+            ...(algorithm === 'AES-GCM' ? { tagLength: 128 } : {}) // GCM needs tagLength
           },
           key,
           enc
         );
-        
-        const encryptedArray = new Uint8Array(encrypted);
-        const encryptedBase64 = btoa(String.fromCharCode(...iv, ...encryptedArray));
-        
+
+        // Combine IV + Ciphertext
+        const result = new Uint8Array(iv.length + encrypted.byteLength);
+        result.set(iv, 0); // Prepend IV
+        result.set(new Uint8Array(encrypted), iv.length); // Append ciphertext
+
+        // Encode result to Base64 for easy handling
+        const encryptedBase64 = btoa(String.fromCharCode(...result));
+
         outputEl.textContent = encryptedBase64;
-        showStatus('Text encrypted successfully!', 'success');
-      } catch (e) {
-        console.error(e);
-        showStatus('Encryption failed. Please check your inputs.', 'error');
+        showStatus('Encryption successful!', 'success');
+
+      } catch (error) {
+        console.error('Encryption error:', error);
+        showStatus('Encryption failed: ' + getErrorMessage(error), 'error');
+        outputEl.textContent = ''; // Clear output on error
+      } finally {
+         setBusyState(false, encryptBtn);
+         setBusyState(false, decryptBtn);
       }
     }
-    
-    // Decrypt text
+
     async function decryptText() {
-      try {
-        const encrypted = plainTextEl.value.trim();
-        const password = keyEl.value.trim();
-        
-        if (!encrypted) return showStatus('Please enter encrypted data', 'error');
-        if (!password) return showStatus('Please enter the secret key', 'error');
-        
-        // Try to detect if input is base64
+        hideStatus();
+        const encryptedBase64 = plainTextEl.value.trim();
+        const password = keyEl.value;
+
+        if (!encryptedBase64) { showStatus('Encrypted data required', 'error'); plainTextEl.focus(); return; }
+        if (!password) { showStatus('Secret key required', 'error'); keyEl.focus(); return; }
+
+        setBusyState(true, decryptBtn, 'Decrypting');
+        setBusyState(true, encryptBtn, ''); // Disable encrypt too
+
         try {
-          atob(encrypted);
-        } catch {
-          return showStatus('Invalid encrypted data format', 'error');
+            showStatus('Deriving key & decrypting...', 'info', 10000);
+
+            // Validate Base64 format (basic check)
+            if (!/^[a-zA-Z0-9+/=]+$/.test(encryptedBase64) || encryptedBase64.length % 4 !== 0) {
+                 throw new Error('Invalid Base64 format');
+            }
+
+            // Decode Base64
+            let binaryString;
+            try {
+                 binaryString = atob(encryptedBase64);
+            } catch (e) {
+                 throw new Error('Invalid Base64 data');
+            }
+
+            const bytes = new Uint8Array(binaryString.length).map((_, i) => binaryString.charCodeAt(i));
+
+            const algorithm = algorithmEl.value;
+            const ivSize = algorithm === 'AES-GCM' ? 12 : 16;
+
+            if (bytes.length < ivSize) {
+                throw new Error('Data too short (missing IV?)');
+            }
+
+            // Extract IV and Ciphertext
+            const iv = bytes.slice(0, ivSize);
+            const encryptedData = bytes.slice(ivSize);
+
+            if (encryptedData.length === 0) {
+                 throw new Error('Encrypted data portion is empty');
+            }
+
+
+            const key = await deriveKey(password);
+
+            // Perform decryption
+            const decrypted = await crypto.subtle.decrypt(
+                {
+                    name: algorithm,
+                    iv: iv,
+                    ...(algorithm === 'AES-GCM' ? { tagLength: 128 } : {}) // GCM needs tagLength
+                },
+                key,
+                encryptedData
+            );
+
+            // Decode result from bytes to text
+            const dec = new TextDecoder().decode(decrypted);
+            outputEl.textContent = dec;
+            showStatus('Decryption successful!', 'success');
+
+        } catch (error) {
+            console.error('Decryption error:', error);
+            outputEl.textContent = ''; // Clear output on error
+            // Provide more specific feedback for common crypto errors
+            if (error instanceof DOMException && error.name === 'OperationError') {
+                 showStatus('Decryption failed: Incorrect key, corrupted data, or wrong algorithm/settings', 'error');
+            } else {
+                 showStatus('Decryption failed: ' + getErrorMessage(error), 'error');
+            }
+        } finally {
+             setBusyState(false, decryptBtn);
+             setBusyState(false, encryptBtn);
         }
-        
-        const data = atob(encrypted);
-        const iv = new Uint8Array([...data].slice(0, 12).map(c => c.charCodeAt(0)));
-        const encryptedBytes = new Uint8Array([...data].slice(12).map(c => c.charCodeAt(0)));
-        
-        const key = await deriveKey(password);
-        const decrypted = await crypto.subtle.decrypt(
-          { 
-            name: algorithmEl.value,
-            iv: iv
-          },
-          key,
-          encryptedBytes
-        );
-        
-        const dec = new TextDecoder().decode(decrypted);
-        outputEl.textContent = dec;
-        showStatus('Text decrypted successfully!', 'success');
-      } catch (e) {
-        console.error(e);
-        showStatus('Decryption failed. Wrong key or corrupted data.', 'error');
+    }
+
+    function generateKey() {
+      // Increased character pool for more entropy
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>/?~';
+      const keyLength = 32; // Generate a strong 32-character key
+      const randomValues = new Uint32Array(keyLength);
+      crypto.getRandomValues(randomValues); // Cryptographically secure random numbers
+
+      let generatedKey = '';
+      for (let i = 0; i < keyLength; i++) {
+        generatedKey += chars[randomValues[i] % chars.length];
+      }
+
+      keyEl.value = generatedKey;
+      keyEl.type = 'password'; // Ensure it's hidden after generating
+      revealKeyBtn.textContent = '👁️ Reveal';
+      updateKeyStrength();
+      showStatus(`Generated secure ${keyLength}-character key`, 'success');
+    }
+
+    function revealKey() {
+      if (keyEl.type === 'password') {
+        keyEl.type = 'text';
+        revealKeyBtn.textContent = '🙈 Hide';
+        showStatus('Key revealed - Handle with care!', 'warning');
+      } else {
+        keyEl.type = 'password';
+        revealKeyBtn.textContent = '👁️ Reveal';
+        hideStatus(); // Clear warning
       }
     }
-    
-    // Copy output to clipboard
-    async function copyOutput() {
-      const output = outputEl.textContent;
-      
-      if (!output) {
-        showStatus('No output to copy', 'error');
-        return;
-      }
-      
-      try {
-        await navigator.clipboard.writeText(output);
-        showStatus('Copied to clipboard!', 'success');
-      } catch (e) {
-        showStatus('Failed to copy. Please try again.', 'error');
-      }
-    }
-    
-    // Save output to file
-    function saveToFile() {
-      const output = outputEl.textContent;
-      
-      if (!output) {
-        showStatus('No output to save', 'error');
-        return;
-      }
-      
-      const blob = new Blob([output], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      
-      a.href = url;
-      a.download = 'enco-output.txt';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      showStatus('File saved!', 'success');
-    }
-    
-    // Clear all inputs
+
     function clearAll() {
       plainTextEl.value = '';
       keyEl.value = '';
       outputEl.textContent = '';
-      statusEl.className = 'status';
-      statusEl.textContent = '';
-      strengthMeterEl.style.width = '0';
+      hideStatus();
+      keyEl.type = 'password'; // Ensure key is hidden
+      revealKeyBtn.textContent = '👁️ Reveal';
+      updateKeyStrength();
+      plainTextEl.focus();
+      showStatus('All fields cleared', 'info', 3000);
     }
-    
-    // Show status message
-    function showStatus(message, type) {
-      statusEl.textContent = message;
-      statusEl.className = `status ${type}`;
-      
-      // Auto-hide success messages after 5 seconds
-      if (type === 'success') {
-        setTimeout(() => {
-          if (statusEl.textContent === message) {
-            statusEl.className = 'status';
-            statusEl.textContent = '';
-          }
-        }, 5000);
+
+    async function copyToClipboard(text, successMsg, errorMsgPrefix) {
+        if (!text) {
+            showStatus(`${errorMsgPrefix} nothing to copy`, 'warning');
+            return false;
+        }
+        try {
+            await navigator.clipboard.writeText(text);
+            showStatus(successMsg, 'success', 3000);
+            return true;
+        } catch (err) {
+            console.error('Clipboard error:', err);
+            showStatus(`${errorMsgPrefix} failed to copy: ${err.message}`, 'error');
+            return false;
+        }
+    }
+
+    function copyOutput() {
+      copyToClipboard(outputEl.textContent, 'Output copied!', 'Output:');
+    }
+
+    function copyKey() {
+       copyToClipboard(keyEl.value, 'Secret key copied! Keep it safe.', 'Key:');
+    }
+
+    function copyKeyAndOutput() {
+      const key = keyEl.value;
+      const output = outputEl.textContent;
+      if (!key || !output) {
+          showStatus('Key and Output: Nothing to copy', 'warning');
+          return;
       }
+      const content = `// --- ENCO Data --- //\n// Keep the key SECRET! //\n\n[KEY]:\n${key}\n\n[ENCRYPTED DATA]:\n${output}\n\n// --- End ENCO Data --- //`;
+      copyToClipboard(content, 'Key & Output copied! Keep the key safe.', 'Key & Output:');
     }
+
+    function saveToFile(content, filename, successMsg, errorMsgPrefix) {
+        if (!content) {
+             showStatus(`${errorMsgPrefix} nothing to save`, 'warning');
+             return;
+        }
+        try {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Clean up
+            showStatus(successMsg, 'success', 3000);
+        } catch (e) {
+            console.error('File save error:', e);
+            showStatus(`${errorMsgPrefix} failed to save: ${e.message}`, 'error');
+        }
+    }
+
+    function saveOutputToFile() { // Renamed to avoid conflict
+       const output = outputEl.textContent;
+       const dateStr = new Date().toISOString().slice(0, 10);
+       saveToFile(output, `enco-output-${dateStr}.txt`, 'Output saved!', 'Output:');
+    }
+    // Keep original name for button onclick
+    function saveToFile() { saveOutputToFile(); }
+
+    function saveKeyAndOutput() {
+      const key = keyEl.value;
+      const output = outputEl.textContent;
+       if (!key || !output) {
+          showStatus('Key and Output: Nothing to save', 'warning');
+          return;
+       }
+      const content = `// --- ENCO Data --- //\n// Keep the key SECRET and the file SECURE! //\n\n[KEY]:\n${key}\n\n[ENCRYPTED DATA]:\n${output}\n\n// --- End ENCO Data --- //`;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      saveToFile(content, `enco-key-output-${dateStr}.txt`, 'Key & Output saved!', 'Key & Output:');
+    }
+
+
+    // --- Helper Functions ---
+    function getErrorMessage(error) {
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case 'OperationError':
+            // This often means wrong key, corrupted data, or mismatched params (like tagLength or algorithm)
+            return 'Decryption failed (check key/data/settings)';
+          case 'DataError':
+            return 'Invalid data structure for operation';
+          case 'InvalidAccessError':
+             return 'Invalid parameter provided';
+          default:
+            return error.message || 'An unknown crypto error occurred';
+        }
+      } else if (error instanceof Error) {
+           return error.message || 'An unknown error occurred';
+      }
+      return 'An unexpected error occurred';
+    }
+
+
+    // --- Matrix Rain Effect ---
+    function setupMatrixRain() {
+        const canvas = document.getElementById('matrix-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+        let cols = Math.floor(w / 20) + 1;
+        let ypos = Array(cols).fill(0);
+
+        // Adjust canvas size on window resize
+        window.addEventListener('resize', () => {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            cols = Math.floor(w / 20) + 1;
+            ypos = Array(cols).fill(0); // Reset positions on resize
+        });
+
+        ctx.fillStyle = '#000'; // Initial background fill
+        ctx.fillRect(0, 0, w, h);
+
+        function matrix() {
+            // Draw a semi-transparent black rectangle on top of previous frame
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, w, h);
+
+            // Set color and font for the characters
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.6)'; // Use RGBA for potential alpha variations
+            ctx.font = '15pt monospace';
+
+            // Draw the characters for each column
+            ypos.forEach((y, ind) => {
+                // Select a random character (Katakana + Latin + Numbers)
+                const text = String.fromCharCode(Math.random() * 128); // Wider range including symbols
+                const x = ind * 20;
+                ctx.fillText(text, x, y);
+
+                // Randomly reset columns to the top
+                if (y > 100 + Math.random() * 10000) {
+                    ypos[ind] = 0;
+                } else {
+                    // Move the column down
+                    ypos[ind] = y + 20;
+                }
+            });
+
+             requestAnimationFrame(matrix); // Use requestAnimationFrame for smoother animation
+        }
+
+        requestAnimationFrame(matrix); // Start the animation loop
+    }
+
   </script>
 </body>
 </html>
